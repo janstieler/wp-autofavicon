@@ -3,7 +3,7 @@
  * Plugin Name: WP AutoFavicon
  * Plugin URI: https://github.com/janstieler/wp-autofavicon
  * Description: Automatisch generiertes SVG-Favicon mit Dark-Mode-Unterstützung
- * Version: v1.1.3
+ * Version: v1.1.4
  * Author: Kommunikationsdesign Jan-Frederik Stieler
  * Author URI: https://janstieler.de
  * License: MIT
@@ -38,7 +38,7 @@ class WP_AutoFavicon
         add_action('wp_head', array($this, 'add_favicon_tags'));
         add_action('admin_menu', array($this, 'add_settings_page'));
         add_action('admin_init', array($this, 'register_settings'));
-        add_action('init', array($this, 'add_favicon_endpoint'));
+        add_action('init', array($this, 'add_favicon_endpoint'), 1);
         add_action('template_redirect', array($this, 'serve_favicon'));
         add_filter('plugin_action_links_' . plugin_basename(__FILE__), array($this, 'add_plugin_action_links'));
         
@@ -82,8 +82,8 @@ class WP_AutoFavicon
         $home_url = home_url('/');
 
         echo "\n<!-- WP AutoFavicon -->\n";
-        echo '<link rel="icon" type="image/svg+xml" href="' . esc_url($home_url . 'autofavicon.svg') . '">' . "\n";
-        echo '<link rel="alternate icon" type="image/svg+xml" href="' . esc_url($home_url . 'autofavicon.svg') . '">' . "\n";
+        echo '<link rel="icon" type="image/svg+xml" href="' . esc_url($home_url . 'favicon.svg') . '">' . "\n";
+        echo '<link rel="alternate icon" type="image/svg+xml" href="' . esc_url($home_url . 'favicon.svg') . '">' . "\n";
         echo '<!-- /WP AutoFavicon -->' . "\n";
     }
 
@@ -92,11 +92,11 @@ class WP_AutoFavicon
      */
     public function add_favicon_endpoint()
     {
-        add_rewrite_rule('^autofavicon\.svg$', 'index.php?autofavicon=1', 'top');
+        add_rewrite_rule('^favicon\.svg/?$', 'index.php?favicon=1', 'top');
 
         // Füge Query-Var hinzu
         add_filter('query_vars', function ($vars) {
-            $vars[] = 'autofavicon';
+            $vars[] = 'favicon';
             return $vars;
         });
     }
@@ -106,7 +106,7 @@ class WP_AutoFavicon
      */
     public function serve_favicon()
     {
-        if (get_query_var('autofavicon')) {
+        if (get_query_var('favicon')) {
             header('Content-Type: image/svg+xml');
             header('Cache-Control: public, max-age=31536000');
 
@@ -276,7 +276,7 @@ class WP_AutoFavicon
                     </div>
                 </div>
                 <p style="margin-top: 15px;">
-                    <a href="<?php echo esc_url(home_url('/autofavicon.svg')); ?>" target="_blank">
+                    <a href="<?php echo esc_url(home_url('/favicon.svg')); ?>" target="_blank">
                         Favicon direkt anzeigen →
                     </a>
                 </p>
@@ -294,7 +294,7 @@ class WP_AutoFavicon
                 <h3>Verwendung</h3>
                 <p>Das Plugin fügt automatisch die Favicon-Tags zu deinem <code>&lt;head&gt;</code> hinzu. Du musst nichts weiter tun!</p>
                 <p>Das Favicon wird unter dieser URL bereitgestellt:<br>
-                    <code><?php echo esc_html(home_url('/autofavicon.svg')); ?></code>
+                    <code><?php echo esc_html(home_url('/favicon.svg')); ?></code>
                 </p>
             </div>
         </div>

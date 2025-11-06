@@ -144,3 +144,6 @@ Bei Problemen oder Fragen öffne bitte ein Issue auf GitHub.
 
 ### Version 1.1.3
 - fix some warnings if plugin is installed through WP CLI
+
+### Version 1.1.4
+- change the autofavicon.svg filename to favicon.svg
