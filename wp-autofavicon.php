@@ -3,7 +3,7 @@
  * Plugin Name: WP AutoFavicon
  * Plugin URI: https://github.com/janstieler/wp-autofavicon
  * Description: Automatisch generiertes SVG-Favicon mit Dark-Mode-Unterstützung
- * Version: v1.1.4
+ * Version: v1.1.5
  * Author: Kommunikationsdesign Jan-Frederik Stieler
  * Author URI: https://janstieler.de
  * License: MIT
@@ -562,9 +562,9 @@ class WP_AutoFavicon_Updater
             $auto_updates_enabled = in_array($plugin_file, (array) get_site_option('auto_update_plugins', array()));
 
             if ($auto_updates_enabled) {
-                $html = '<a href="' . wp_nonce_url(admin_url('plugins.php?action=disable-auto-update&amp;plugin=' . urlencode($plugin_file)), 'updates') . '" class="plugin-auto-update-disable" aria-label="' . esc_attr('Disable auto-updates') . '">Disable auto-updates</a>';
+                $html = '<a href="' . wp_nonce_url(admin_url('plugins.php?action=disable-auto-update&amp;plugin=' . urlencode($plugin_file)), 'updates') . '" class="plugin-auto-update-disable" aria-label="' . esc_attr__('Disable auto-updates', 'default') . '">' . __('Disable auto-updates', 'default') . '</a>';
             } else {
-                $html = '<a href="' . wp_nonce_url(admin_url('plugins.php?action=enable-auto-update&amp;plugin=' . urlencode($plugin_file)), 'updates') . '" class="plugin-auto-update-enable" aria-label="' . esc_attr('Enable auto-updates') . '">Enable auto-updates</a>';
+                $html = '<a href="' . wp_nonce_url(admin_url('plugins.php?action=enable-auto-update&amp;plugin=' . urlencode($plugin_file)), 'updates') . '" class="plugin-auto-update-enable" aria-label="' . esc_attr__('Enable auto-updates', 'default') . '">' . __('Enable auto-updates', 'default') . '</a>';
             }
         }
         return $html;

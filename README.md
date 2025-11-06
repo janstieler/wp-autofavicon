@@ -147,3 +147,6 @@ Bei Problemen oder Fragen öffne bitte ein Issue auf GitHub.
 
 ### Version 1.1.4
 - change the autofavicon.svg filename to favicon.svg
+
+### Version 1.1.5
+- change the language string to core version for automatic updates
