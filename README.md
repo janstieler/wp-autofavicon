@@ -150,3 +150,6 @@ Bei Problemen oder Fragen öffne bitte ein Issue auf GitHub.
 
 ### Version 1.1.5
 - change the language string to core version for automatic updates
+- 
+### Version 1.1.6
+- change rewrite rules for the favicon.svg
