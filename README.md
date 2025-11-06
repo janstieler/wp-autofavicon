@@ -118,7 +118,7 @@ MIT License - wie das Original Kirby AutoFavicon Plugin
 
 - Original Kirby Plugin: [medienbaecker/kirby-autofavicon](https://github.com/medienbaecker/kirby-autofavicon)
 - Entwickelt von Thomas Günther
-- WordPress-Port: [Dein Name]
+- WordPress-Port: Jan-Frederik Stieler
 
 ## Support
 
