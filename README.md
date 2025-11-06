@@ -103,6 +103,9 @@ update_option('wp_autofavicon_settings', array(
 ));
 ```
 
+## Nach dem Update
+- bitte `wp rewrite flush` ausführen um die favicon Rewrite-Rules neu zu regestrieren!
+
 ## Unterschiede zum Kirby-Original
 
 - Verwendet WordPress Rewrite-Rules statt Kirby-Routen
@@ -156,6 +159,9 @@ Bei Problemen oder Fragen öffne bitte ein Issue auf GitHub.
 
 ### Version 1.1.7
 - fix wp cli problem and details link for github
+
+### Version 1.1.8
+- added debug features and the details link
 
 ## To Do
 - generate png favicons
