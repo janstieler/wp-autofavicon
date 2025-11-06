@@ -1,68 +1,70 @@
 # WP AutoFavicon
+[![en](https://img.shields.io/badge/lang-en-red.svg)](https://github.com/janstieler/wp-autofavicon/blob/main/README.md)
+[![de](https://img.shields.io/badge/lang-de-yellow.svg)](https://github.com/janstieler/wp-autofavicon/blob/main/README.de.md)
 
-Ein WordPress-Plugin, das automatisch ein SVG-Favicon mit Dark-Mode-Unterstützung generiert. Portiert vom [Kirby AutoFavicon Plugin](https://github.com/medienbaecker/kirby-autofavicon).
+A WordPress plugin that automatically generates an SVG favicon with dark mode support. Ported from the [Kirby AutoFavicon Plugin](https://github.com/medienbaecker/kirby-autofavicon).
 
 ## Features
 
-- 🎨 Automatisch generiertes SVG-Favicon
-- 🌓 Dark-Mode-Unterstützung (reagiert auf `prefers-color-scheme`)
-- ⚙️ Einfache Konfiguration über WordPress-Einstellungen
-- 🚀 Keine zusätzlichen Dateien notwendig
-- 💾 SVG wird dynamisch generiert und mit Cache-Headers ausgeliefert
+- 🎨 Automatically generated SVG favicon
+- 🌓 Dark mode support (responds to `prefers-colour-scheme`)
+- ⚙️ Easy configuration via WordPress settings
+- 🚀 No additional files required
+- 💾 SVG is dynamically generated and delivered with cache headers
 
 ## Installation
 
-### Manuelle Installation
+### Manual installation
 
-1. Lade die Datei `wp-autofavicon.php` in dein WordPress `wp-content/plugins/` Verzeichnis hoch
-2. Aktiviere das Plugin über das WordPress Admin-Panel unter "Plugins"
-3. Gehe zu "Einstellungen" → "AutoFavicon" um das Plugin zu konfigurieren
+1. Upload the file `wp-autofavicon.php` to your WordPress `wp-content/plugins/` directory
+2. Activate the plugin via the WordPress admin panel under ‘Plugins’
+3. Go to ‘Settings’ → ‘AutoFavicon’ to configure the plugin
 
 ### Installation via ZIP
 
-1. Erstelle einen Ordner `wp-autofavicon`
-2. Lege die Datei `wp-autofavicon.php` in diesen Ordner
-3. Komprimiere den Ordner als ZIP-Datei
-4. Lade das ZIP über das WordPress Admin-Panel hoch ("Plugins" → "Installieren" → "Plugin hochladen")
+1. Create a folder called `wp-autofavicon`
+2. Place the file `wp-autofavicon.php` in this folder
+3. Compress the folder as a ZIP file
+4. Upload the ZIP file via the WordPress admin panel (‘Plugins’ → “Install” → ‘Upload plugin’)
 
-## Konfiguration
+## Configuration
 
-Nach der Aktivierung findest du die Einstellungen unter **Einstellungen → AutoFavicon**.
+After activation, you will find the settings under **Settings → AutoFavicon**.
 
-### Verfügbare Optionen
+### Available options
 
-- **Text**: Ein oder zwei Zeichen für das Favicon (Standard: Erster Buchstabe des Blog-Namens)
-- **Hintergrundfarbe (Hell)**: Hintergrundfarbe für den Hell-Modus (Standard: `#000000`)
-- **Hintergrundfarbe (Dunkel)**: Hintergrundfarbe für den Dunkel-Modus (Standard: `#ffffff`)
-- **Textfarbe (Hell)**: Textfarbe für den Hell-Modus (Standard: `#ffffff`)
-- **Textfarbe (Dunkel)**: Textfarbe für den Dunkel-Modus (Standard: `#000000`)
+- **Text**: One or two characters for the favicon (default: first letter of the blog name)
+- **Background colour (light)**: Background colour for light mode (default: `#000000`)
+- **Background colour (dark)**: Background colour for dark mode (default: `#ffffff`)
+- **Text colour (light)**: Text colour for light mode (default: `#ffffff`)
+- **Text colour (dark)**: Text colour for dark mode (default: `#000000`)
 
-### Standard-Verhalten
+### Default behaviour
 
-Ohne Konfiguration nutzt das Plugin:
-- Den ersten Buchstaben deines Blog-Namens als Text
-- Schwarzen Hintergrund mit weißem Text im Hell-Modus
-- Weißen Hintergrund mit schwarzem Text im Dunkel-Modus
+Without configuration, the plugin uses:
+- The first letter of your blog name as text
+- Black background with white text in light mode
+- White background with black text in dark mode
 
-## Verwendung
+## Usage
 
-Das Plugin funktioniert automatisch nach der Aktivierung. Es fügt die notwendigen `<link>`-Tags zu deinem WordPress `<head>` hinzu:
+The plugin works automatically after activation. It adds the necessary `<link>` tags to your WordPress `<head>`:
 
 ```html
 <link rel="icon" type="image/svg+xml" href="https://deine-website.de/autofavicon.svg">
 <link rel="alternate icon" type="image/svg+xml" href="https://deine-website.de/autofavicon.svg">
 ```
 
-Das SVG-Favicon wird unter folgender URL bereitgestellt:
+The SVG favicon is provided at the following URL:
 ```
 https://deine-website.de/autofavicon.svg
 ```
 
-## Technische Details
+## Technical details
 
-### SVG-Struktur
+### SVG structure
 
-Das Plugin generiert ein SVG mit folgender Struktur:
+The plugin generates an SVG with the following structure:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -70,86 +72,86 @@ Das Plugin generiert ein SVG mit folgender Struktur:
   <style>
     rect { fill: #000000; }
     text { fill: #ffffff; font-family: system-ui, sans-serif; font-size: 60px; font-weight: 700; }
-    @media (prefers-color-scheme: dark) {
+    @media (prefers-colour-scheme: dark) {
       rect { fill: #ffffff; }
       text { fill: #000000; }
     }
   </style>
   <rect width="100" height="100" rx="20" />
-  <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central">A</text>
+  <text x="50%" y="50%" text-anchor=‘middle’ dominant-baseline=‘central’>A</text>
 </svg>
 ```
 
-### Browser-Kompatibilität
+### Browser compatibility
 
 - ✅ Chrome/Edge (80+)
 - ✅ Firefox (67+)
 - ✅ Safari (13+)
 - ✅ Opera (67+)
 
-Alle modernen Browser unterstützen SVG-Favicons und die `prefers-color-scheme` Media-Query.
+All modern browsers support SVG favicons and the `prefers-color-scheme` media query.
 
-## Programmierbare Anpassung
+## Programmable customisation
 
-Du kannst die Einstellungen auch programmatisch über WordPress-Optionen ändern:
+You can also change the settings programmatically via WordPress options:
 
 ```php
-update_option('wp_autofavicon_settings', array(
-    'text' => 'WP',
-    'color' => '#1e3a8a',
-    'color_dark' => '#3b82f6',
-    'text_color' => '#ffffff',
-    'text_color_dark' => '#ffffff',
+update_option(“wp_autofavicon_settings”, array(
+    “text” => “WP”,
+    “colour” => “#1e3a8a”,
+    “colour_dark” => “#3b82f6”,
+    “text_colour” => “#ffffff”,
+    “text_colour_dark” => “#ffffff”,
 ));
 ```
 
-## Nach dem Update
-- bitte `wp rewrite flush` ausführen um die favicon Rewrite-Rules neu zu regestrieren!
+## After the update
+- Please run `wp rewrite flush` to re-register the favicon rewrite rules!
 
-## Unterschiede zum Kirby-Original
+## Differences from the original Kirby plugin
 
-- Verwendet WordPress Rewrite-Rules statt Kirby-Routen
-- Einstellungen über WordPress-Optionen statt `config.php`
-- Admin-Oberfläche mit Vorschau im WordPress-Backend
-- Automatische Integration in `wp_head` statt Snippet-Aufruf
+- Uses WordPress rewrite rules instead of Kirby routes
+- Settings via WordPress options instead of `config.php`
+- Admin interface with preview in the WordPress backend
+- Automatic integration into `wp_head` instead of snippet call
 
-## Lizenz
+## Licence
 
-MIT License - wie das Original Kirby AutoFavicon Plugin
+MIT Licence - like the original Kirby AutoFavicon plugin
 
 ## Credits
 
-- Original Kirby Plugin: [medienbaecker/kirby-autofavicon](https://github.com/medienbaecker/kirby-autofavicon)
-- Entwickelt von Thomas Günther
-- WordPress-Port: Jan-Frederik Stieler
+- Original Kirby plugin: [medienbaecker/kirby-autofavicon](https://github.com/medienbaecker/kirby-autofavicon)
+- Developed by Thomas Günther
+- WordPress port: Jan-Frederik Stieler
 
 ## Support
 
-Bei Problemen oder Fragen öffne bitte ein Issue auf GitHub.
+If you have any problems or questions, please open an issue on GitHub.
 
 ## Changelog
 
 ### Version 1.0.0
-- Erste Version
-- Portierung der Basis-Funktionalität von Kirby AutoFavicon
-- WordPress Admin-Interface
-- Dark-Mode-Unterstützung
-- Vorschau-Funktion im Admin-Bereich
+- First version
+- Porting of the basic functionality of Kirby AutoFavicon
+- WordPress admin interface
+- Dark mode support
+- Preview function in the admin area
 
 ### Version 1.1.0
-- Adding Autoupdate to the plugin
+- Adding autoupdate to the plugin
 
 ### Version 1.1.1
-- fix using release tag for autoupdate vX.X.X instead of X.X.X
+- Fix using release tag for autoupdate vX.X.X instead of X.X.X
 
 ### Version 1.1.2
-- don't show the new version info at the plugin dashboard if the installed version is newer than the Github version
+- Do not show the new version information on the plugin dashboard if the installed version is newer than the GitHub version
 
 ### Version 1.1.3
-- fix some warnings if plugin is installed through WP CLI
+- Fix some warnings if the plugin is installed via WP CLI
 
 ### Version 1.1.4
-- change the autofavicon.svg filename to favicon.svg
+- Change the autofavicon.svg filename to favicon.svg
 
 ### Version 1.1.5
 - change the language string to core version for automatic updates
@@ -161,10 +163,9 @@ Bei Problemen oder Fragen öffne bitte ein Issue auf GitHub.
 - fix wp cli problem and details link for github
 
 ### Version 1.1.8
-- added debug features and the details link
+- Add debug functions and the details link
 
-## To Do
-- generate png favicons
-- add composer for install
-- add plugin to https://wordpress.org/plugins/
-
+## To do
+- Generate PNG favicons
+- Add Composer for installation
+- Add the plugin to https://wordpress.org/plugins/
