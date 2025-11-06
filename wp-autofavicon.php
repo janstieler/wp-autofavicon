@@ -428,6 +428,11 @@ class WP_AutoFavicon_Updater
             add_action('wp_ajax_check_autofavicon_updates', array($this, 'ajax_check_updates'));
             add_action('admin_footer', array($this, 'add_debug_script'));
         }
+
+        // CLI Debug-Kommando für Update-Test
+        if (defined('WP_CLI') && WP_CLI) {
+            $this->register_cli_debug_command();
+        }
     }
 
     public function modify_transient($transient)
@@ -628,6 +633,62 @@ class WP_AutoFavicon_Updater
             }
         }
         return $html;
+    }
+    public function register_cli_debug_command()
+    {
+        if (class_exists('WP_CLI')) {
+            WP_CLI::add_command('autofavicon debug', array($this, 'cli_debug_updates'));
+        }
+    }
+
+    public function cli_debug_updates($args, $assoc_args)
+    {
+        WP_CLI::line("=== WP AutoFavicon Update Debug ===");
+        
+        $plugin_data = get_plugin_data(__FILE__);
+        $current_version = $plugin_data['Version'];
+        WP_CLI::line("Lokale Version: " . $current_version);
+        
+        // Direkte GitHub API Abfrage
+        $response = wp_remote_get('https://api.github.com/repos/janstieler/wp-autofavicon/releases/latest');
+        if (is_wp_error($response)) {
+            WP_CLI::error("GitHub API Fehler: " . $response->get_error_message());
+            return;
+        }
+        
+        $github_data = json_decode(wp_remote_retrieve_body($response), true);
+        if (!$github_data || !isset($github_data['tag_name'])) {
+            WP_CLI::error("Ungültige GitHub API Antwort.");
+            return;
+        }
+        
+        $github_version_raw = $github_data['tag_name'];
+        $github_version = ltrim($github_version_raw, 'vV');
+        $current_normalized = ltrim($current_version, 'vV');
+        
+        WP_CLI::line("GitHub Version (raw): " . $github_version_raw);
+        WP_CLI::line("GitHub Version (normalized): " . $github_version);
+        WP_CLI::line("Lokale Version (normalized): " . $current_normalized);
+        
+        $update_available = version_compare($github_version, $current_normalized, 'gt');
+        WP_CLI::line("Update verfügbar: " . ($update_available ? 'JA' : 'NEIN'));
+        
+        // Prüfe WordPress Update-Transient
+        $update_plugins = get_site_transient('update_plugins');
+        $has_wp_update = isset($update_plugins->response[plugin_basename(__FILE__)]);
+        WP_CLI::line("WordPress erkennt Update: " . ($has_wp_update ? 'JA' : 'NEIN'));
+        
+        if ($update_available) {
+            WP_CLI::success("Update von {$current_version} auf {$github_version} verfügbar!");
+            WP_CLI::line("Download URL: " . $github_data['zipball_url']);
+            
+            if (!$has_wp_update) {
+                WP_CLI::warning("WordPress erkennt das Update nicht - möglicherweise Cache-Problem!");
+                WP_CLI::line("Lösung: wp option delete '_site_transient_update_plugins'");
+            }
+        } else {
+            WP_CLI::success("Plugin ist auf dem neuesten Stand.");
+        }
     }
 }
 
