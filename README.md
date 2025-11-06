@@ -168,6 +168,10 @@ If you have any problems or questions, please open an issue on GitHub.
 ### Version 1.2.0
 - Add  PNG und ico Favicon functionallity
 
+### Version 1.2.1
+- Use the template font for PNGs
+- Added button to renew the favicons
+
 ## To do
 - ~~Generate PNG favicons~~
 - Add Composer for installation

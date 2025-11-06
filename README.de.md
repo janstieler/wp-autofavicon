@@ -166,6 +166,10 @@ Bei Problemen oder Fragen öffne bitte ein Issue auf GitHub.
 ### Version 1.2.0
 - Hinzufügen von PNG und ico Favicon
 
+### Version 1.2.1
+- Die Templateschrift für PNGs nutzen
+- Button hinzugefügt um die Favicons zu erneuern
+
 ## Zu erledigen
 - ~~Generieren von PNG-Favicons~~
 - Hinzufügen von Composer für die Installation

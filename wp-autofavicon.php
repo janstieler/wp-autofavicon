@@ -3,7 +3,7 @@
  * Plugin Name: WP AutoFavicon
  * Plugin URI: https://github.com/janstieler/wp-autofavicon
  * Description: Automatisch generiertes SVG-Favicon mit Dark-Mode-Unterstützung
- * Version: v1.2.0
+ * Version: v1.2.1
  * Author: Kommunikationsdesign Jan-Frederik Stieler
  * Author URI: https://janstieler.de
  * License: MIT
@@ -38,7 +38,7 @@ class WP_AutoFavicon
         add_action('wp_head', array($this, 'add_favicon_tags'));
         add_action('admin_menu', array($this, 'add_settings_page'));
         add_action('admin_init', array($this, 'register_settings'));
-        add_action('init', array($this, 'add_favicon_endpoint'), 0);
+        add_action('init', array($this, 'add_favicon_endpoint'), 1);
         add_action('template_redirect', array($this, 'serve_favicon'));
         add_filter('plugin_action_links_' . plugin_basename(__FILE__), array($this, 'add_plugin_action_links'));
         add_filter('plugin_row_meta', array($this, 'add_plugin_row_meta'), 10, 2);
@@ -48,6 +48,14 @@ class WP_AutoFavicon
 
         // Update-System initialisieren (nach init, um Textdomain-Probleme zu vermeiden)
         add_action('init', array($this, 'init_updater'));
+        
+        // Generiere physische Favicon-Dateien
+        add_action('init', array($this, 'ensure_physical_favicons'));
+        add_action('updated_option', array($this, 'on_settings_update'), 10, 3);
+        
+        // AJAX Handler für Favicon-Regenerierung
+        add_action('wp_ajax_regenerate_favicons', array($this, 'ajax_regenerate_favicons'));
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
     }
 
     /**
@@ -84,8 +92,8 @@ class WP_AutoFavicon
 
         echo "\n<!-- WP AutoFavicon -->\n";
         echo '<link rel="icon" type="image/svg+xml" href="' . esc_url($home_url . 'favicon.svg') . '">' . "\n";
-        echo '<link rel="icon" type="image/png" sizes="32x32" href="' . esc_url($home_url . 'favicon-32x32.png') . '">' . "\n";
-        echo '<link rel="icon" type="image/png" sizes="16x16" href="' . esc_url($home_url . 'favicon-16x16.png') . '">' . "\n";
+        echo '<link rel="icon" type="image/png" sizes="96x96" href="' . esc_url($home_url . 'favicon-96x96.png') . '">' . "\n";
+        echo '<link rel="apple-touch-icon" sizes="180x180" href="' . esc_url($home_url . 'apple-touch-icon.png') . '">' . "\n";
         echo '<link rel="shortcut icon" href="' . esc_url($home_url . 'favicon.ico') . '">' . "\n";
         echo '<link rel="alternate icon" type="image/svg+xml" href="' . esc_url($home_url . 'favicon.svg') . '">' . "\n";
         echo '<!-- /WP AutoFavicon -->' . "\n";
@@ -97,8 +105,8 @@ class WP_AutoFavicon
     public function add_favicon_endpoint()
     {
         add_rewrite_rule('^favicon\.svg/?$', 'index.php?favicon=svg', 'top');
-        add_rewrite_rule('^favicon-32x32\.png/?$', 'index.php?favicon=png32', 'top');
-        add_rewrite_rule('^favicon-16x16\.png/?$', 'index.php?favicon=png16', 'top');
+        add_rewrite_rule('^favicon-96x96\.png/?$', 'index.php?favicon=png96', 'top');
+        add_rewrite_rule('^apple-touch-icon\.png/?$', 'index.php?favicon=png180', 'top');
         add_rewrite_rule('^favicon\.ico/?$', 'index.php?favicon=ico', 'top');
 
         // Füge Query-Var hinzu
@@ -122,16 +130,16 @@ class WP_AutoFavicon
                 echo $this->generate_svg();
                 exit;
                 
-            case 'png32':
+            case 'png96':
                 header('Content-Type: image/png');
                 header('Cache-Control: public, max-age=31536000');
-                echo $this->generate_png(32);
+                echo $this->generate_png(96);
                 exit;
                 
-            case 'png16':
+            case 'png180':
                 header('Content-Type: image/png');
                 header('Cache-Control: public, max-age=31536000');
-                echo $this->generate_png(16);
+                echo $this->generate_png(180);
                 exit;
                 
             case 'ico':
@@ -204,17 +212,51 @@ class WP_AutoFavicon
         // Hintergrund füllen mit abgerundeten Ecken (vereinfacht als Rechteck)
         imagefill($image, 0, 0, $bg);
         
-        // Text hinzufügen
-        $font_size = $size * 0.6; // 60% der Bildgröße
-        $font = 5; // Standard GD Font
-        
-        // Text zentrieren
-        $text_width = imagefontwidth($font) * strlen($text);
-        $text_height = imagefontheight($font);
-        $x = ($size - $text_width) / 2;
-        $y = ($size - $text_height) / 2;
-        
-        imagestring($image, $font, $x, $y, $text, $fg);
+        // Text hinzufügen - SVG verwendet font-size: 60px bei viewBox 100x100 = 60% der Größe
+        if (function_exists('imagettftext')) {
+            // Theme font-family: 'Din', Helvetica, Arial, Verdana, sans-serif
+            // Verwende tatsächliche Din TTF-Fonts aus dem Theme
+            $theme_path = get_template_directory();
+            $font_files = [
+                $theme_path . '/assets/fonts/din/din-regular.ttf',               // Original Din Font
+                $theme_path . '/assets/fonts/din/din-bold.ttf',                  // Din Bold als Alternative
+                '/usr/share/fonts/opentype/urw-base35/NimbusSans-Regular.otf',   // Helvetica-Äquivalent (Fallback)
+                '/System/Library/Fonts/Helvetica.ttc',                           // Helvetica (macOS)
+                '/Windows/Fonts/arial.ttf',                                      // Arial (Windows)
+                '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf', // Arial-Äquivalent
+                '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'               // Verdana-ähnlich
+            ];
+            
+            $font_file = null;
+            foreach ($font_files as $file) {
+                if (file_exists($file)) {
+                    $font_file = $file;
+                    break;
+                }
+            }
+            
+            if ($font_file) {
+                // SVG verwendet 60% der Größe für den Text
+                $font_size = $size * 0.6;
+                
+                // Berechne Textposition für Zentrierung
+                $bbox = imagettfbbox($font_size, 0, $font_file, $text);
+                $text_width = $bbox[4] - $bbox[0];
+                $text_height = $bbox[1] - $bbox[7];
+                
+                $x = ($size - $text_width) / 2 - $bbox[0];
+                $y = ($size - $text_height) / 2 - $bbox[7];
+                
+                // Zeichne Text
+                imagettftext($image, $font_size, 0, (int)$x, (int)$y, $fg, $font_file, $text);
+            } else {
+                // Fallback auf GD Font
+                $this->draw_gd_text($image, $size, $text, $fg);
+            }
+        } else {
+            // Fallback auf GD Font
+            $this->draw_gd_text($image, $size, $text, $fg);
+        }
         
         // PNG ausgeben
         ob_start();
@@ -232,7 +274,7 @@ class WP_AutoFavicon
      */
     private function generate_ico()
     {
-        // Erstelle 16x16 und 32x32 PNGs für das ICO
+        // Erstelle 16x16 und 32x32 PNGs für das ICO (für Kompatibilität)
         $png16 = $this->generate_png(16);
         $png32 = $this->generate_png(32);
         
@@ -245,6 +287,19 @@ class WP_AutoFavicon
         $ico_dir2 = pack('CCCCvvVV', 32, 32, 0, 0, 1, 32, strlen($png32), 22 + strlen($png16)); // 32x32
         
         return $ico_header . $ico_dir1 . $ico_dir2 . $png16 . $png32;
+    }
+
+    /**
+     * Zeichnet Text mit GD-Font als Fallback
+     */
+    private function draw_gd_text($image, $size, $text, $color)
+    {
+        $font = 5; // Größter verfügbarer GD Font
+        $text_width = imagefontwidth($font) * strlen($text);
+        $text_height = imagefontheight($font);
+        $x = ($size - $text_width) / 2;
+        $y = ($size - $text_height) / 2;
+        imagestring($image, $font, (int)$x, (int)$y, $text, $color);
     }
 
     /**
@@ -261,6 +316,102 @@ class WP_AutoFavicon
             'g' => hexdec(substr($hex, 2, 2)),
             'b' => hexdec(substr($hex, 4, 2))
         );
+    }
+
+    /**
+     * Stellt sicher, dass physische Favicon-Dateien existieren
+     */
+    public function ensure_physical_favicons()
+    {
+        $root_path = ABSPATH;
+        
+        // Prüfe ob Dateien existieren und aktuell sind
+        $files_to_check = [
+            'favicon.svg',
+            'favicon-96x96.png',
+            'apple-touch-icon.png', 
+            'favicon.ico'
+        ];
+        
+        $needs_update = false;
+        foreach ($files_to_check as $file) {
+            $file_path = $root_path . $file;
+            if (!file_exists($file_path) || filemtime($file_path) < time() - 3600) {
+                $needs_update = true;
+                break;
+            }
+        }
+        
+        if ($needs_update) {
+            $this->generate_physical_favicon_files();
+        }
+    }
+
+    /**
+     * Wird aufgerufen wenn Plugin-Einstellungen aktualisiert werden
+     */
+    public function on_settings_update($option, $old_value, $value)
+    {
+        if ($option === 'wp_autofavicon_settings') {
+            $this->generate_physical_favicon_files();
+        }
+    }
+
+    /**
+     * Generiert physische Favicon-Dateien im Root-Verzeichnis
+     */
+    public function generate_physical_favicon_files()
+    {
+        $root_path = ABSPATH;
+        $files_created = [];
+        
+        try {
+            // SVG Favicon
+            $svg_content = $this->generate_svg();
+            if (!file_put_contents($root_path . 'favicon.svg', $svg_content)) {
+                throw new Exception('Konnte favicon.svg nicht schreiben');
+            }
+            $files_created[] = 'favicon.svg';
+            
+            // PNG Favicons
+            if (!extension_loaded('gd')) {
+                throw new Exception('GD Extension ist nicht verfügbar');
+            }
+            
+            $png96 = $this->generate_png(96);
+            if (!$png96) {
+                throw new Exception('Konnte 96x96 PNG nicht generieren');
+            }
+            if (!file_put_contents($root_path . 'favicon-96x96.png', $png96)) {
+                throw new Exception('Konnte favicon-96x96.png nicht schreiben');
+            }
+            $files_created[] = 'favicon-96x96.png';
+            
+            $png180 = $this->generate_png(180);
+            if (!$png180) {
+                throw new Exception('Konnte 180x180 PNG nicht generieren');
+            }
+            if (!file_put_contents($root_path . 'apple-touch-icon.png', $png180)) {
+                throw new Exception('Konnte apple-touch-icon.png nicht schreiben');
+            }
+            $files_created[] = 'apple-touch-icon.png';
+            
+            // ICO Favicon
+            $ico_content = $this->generate_ico();
+            if (!$ico_content) {
+                throw new Exception('Konnte ICO nicht generieren');
+            }
+            if (!file_put_contents($root_path . 'favicon.ico', $ico_content)) {
+                throw new Exception('Konnte favicon.ico nicht schreiben');
+            }
+            $files_created[] = 'favicon.ico';
+            
+            return $files_created;
+            
+        } catch (Exception $e) {
+            // Bei Fehlern, bereits erstellte Dateien nicht löschen
+            throw new Exception('Favicon-Generierung fehlgeschlagen: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -415,6 +566,16 @@ class WP_AutoFavicon
                     <code><?php echo esc_html(home_url('/favicon.svg')); ?></code>
                 </p>
             </div>
+
+            <div style="margin-top: 20px; padding: 15px; background: #fff; border-left: 4px solid #d63638;">
+                <h3>Favicon-Dateien regenerieren</h3>
+                <p>Klicke hier, um alle Favicon-Dateien (PNG, ICO) mit den aktuellen Einstellungen neu zu generieren:</p>
+                <button type="button" id="regenerate-favicons" class="button button-secondary">
+                    <span class="dashicons dashicons-update" style="margin-top: 3px;"></span>
+                    Favicons regenerieren
+                </button>
+                <div id="regenerate-status" style="margin-top: 10px;"></div>
+            </div>
         </div>
         <?php
     }
@@ -461,6 +622,50 @@ class WP_AutoFavicon
             add_action('admin_footer', array($this, 'add_details_popup'));
         }
         return $links;
+    }
+
+    /**
+     * Lädt Admin-Skripte
+     */
+    public function enqueue_admin_scripts($hook)
+    {
+        // Nur auf der Plugin-Einstellungsseite laden
+        if ($hook !== 'settings_page_wp-autofavicon') {
+            return;
+        }
+        
+        wp_enqueue_script('wp-autofavicon-admin', plugin_dir_url(__FILE__) . 'admin.js', array('jquery'), '1.0', true);
+        wp_localize_script('wp-autofavicon-admin', 'wpAutofavicon', array(
+            'ajaxurl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('regenerate_favicons_nonce')
+        ));
+    }
+
+    /**
+     * AJAX Handler für Favicon-Regenerierung
+     */
+    public function ajax_regenerate_favicons()
+    {
+        // Sicherheitsprüfung
+        if (!check_ajax_referer('regenerate_favicons_nonce', 'nonce', false)) {
+            wp_send_json_error('Sicherheitsfehler');
+            return;
+        }
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Keine Berechtigung');
+            return;
+        }
+        
+        try {
+            // Regeneriere alle Favicon-Dateien
+            $files_created = $this->generate_physical_favicon_files();
+            
+            $message = 'Favicons erfolgreich regeneriert! Dateien erstellt: ' . implode(', ', $files_created);
+            wp_send_json_success($message);
+        } catch (Exception $e) {
+            wp_send_json_error('Fehler beim Regenerieren: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -814,7 +1019,7 @@ function wp_autofavicon_init()
 {
     new WP_AutoFavicon();
 }
-add_action('plugins_loaded', 'wp_autofavicon_init');
+add_action('init', 'wp_autofavicon_init', 0);
 
 // Aktivierungs-Hook für die Rewrite-Rules
 register_activation_hook(__FILE__, function () {
