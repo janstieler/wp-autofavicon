@@ -3,7 +3,7 @@
  * Plugin Name: WP AutoFavicon
  * Plugin URI: https://github.com/janstieler/wp-autofavicon
  * Description: Automatisch generiertes SVG-Favicon mit Dark-Mode-Unterstützung
- * Version: v1.1.6
+ * Version: v1.1.7
  * Author: Kommunikationsdesign Jan-Frederik Stieler
  * Author URI: https://janstieler.de
  * License: MIT
@@ -41,6 +41,7 @@ class WP_AutoFavicon
         add_action('init', array($this, 'add_favicon_endpoint'), 0);
         add_action('template_redirect', array($this, 'serve_favicon'));
         add_filter('plugin_action_links_' . plugin_basename(__FILE__), array($this, 'add_plugin_action_links'));
+        add_filter('plugin_row_meta', array($this, 'add_plugin_row_meta'), 10, 2);
         
         // Textdomain laden
         add_action('init', array($this, 'load_textdomain'));
@@ -328,6 +329,65 @@ class WP_AutoFavicon
         $settings_link = '<a href="' . admin_url('options-general.php?page=wp-autofavicon') . '">Einstellungen</a>';
         array_unshift($links, $settings_link);
         return $links;
+    }
+
+    /**
+     * Fügt Details-Link in der Plugin-Übersicht hinzu
+     */
+    public function add_plugin_row_meta($links, $file)
+    {
+        if ($file === plugin_basename(__FILE__)) {
+            $details_link = '<a href="#" onclick="tb_show(\'Plugin Details\', \'#TB_inline?width=772&height=550&inlineId=wp-autofavicon-details\');">Details anzeigen</a>';
+            $links[] = $details_link;
+            
+            // Füge versteckten Inhalt für das Details-Popup hinzu
+            add_action('admin_footer', array($this, 'add_details_popup'));
+        }
+        return $links;
+    }
+
+    /**
+     * Fügt Details-Popup für das Plugin hinzu
+     */
+    public function add_details_popup()
+    {
+        $plugin_data = get_plugin_data(__FILE__);
+        ?>
+        <div id="wp-autofavicon-details" style="display: none;">
+            <div style="padding: 20px;">
+                <h2><?php echo esc_html($plugin_data['Name']); ?> v<?php echo esc_html($plugin_data['Version']); ?></h2>
+                
+                <p><strong>Beschreibung:</strong><br>
+                <?php echo esc_html($plugin_data['Description']); ?></p>
+                
+                <p><strong>Autor:</strong> <a href="<?php echo esc_url($plugin_data['AuthorURI']); ?>" target="_blank"><?php echo esc_html($plugin_data['Author']); ?></a></p>
+                
+                <p><strong>Plugin URI:</strong> <a href="<?php echo esc_url($plugin_data['PluginURI']); ?>" target="_blank"><?php echo esc_html($plugin_data['PluginURI']); ?></a></p>
+                
+                <p><strong>Version:</strong> <?php echo esc_html($plugin_data['Version']); ?></p>
+                
+                <p><strong>WordPress Kompatibilität:</strong><br>
+                Mindestens WordPress <?php echo esc_html($plugin_data['RequiresWP'] ?? '5.0'); ?><br>
+                Getestet bis WordPress 6.8.3</p>
+                
+                <p><strong>PHP Kompatibilität:</strong><br>
+                Mindestens PHP 7.4</p>
+                
+                <h3>Funktionen</h3>
+                <ul>
+                    <li>Automatisch generiertes SVG-Favicon basierend auf Website-Name</li>
+                    <li>Dark-Mode Unterstützung mit automatischer Farbanpassung</li>
+                    <li>Vollständig anpassbare Farben für Hell- und Dunkel-Modus</li>
+                    <li>Individueller Text (1-2 Zeichen)</li>
+                    <li>Automatische Updates von GitHub</li>
+                    <li>WordPress-Standards konform</li>
+                </ul>
+                
+                <h3>Installation</h3>
+                <p>Das Plugin ist bereits installiert und aktiviert. Gehen Sie zu <strong>Einstellungen → AutoFavicon</strong> um es zu konfigurieren.</p>
+            </div>
+        </div>
+        <?php
     }
 }
 
