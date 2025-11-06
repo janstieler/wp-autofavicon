@@ -132,3 +132,15 @@ Bei Problemen oder Fragen öffne bitte ein Issue auf GitHub.
 - WordPress Admin-Interface
 - Dark-Mode-Unterstützung
 - Vorschau-Funktion im Admin-Bereich
+
+### Version 1.1.0
+- Adding Autoupdate to the plugin
+
+### Version 1.1.1
+- fix using release tag for autoupdate vX.X.X instead of X.X.X
+
+### Version 1.1.2
+- don't show the new version info at the plugin dashboard if the installed version is newer than the Github version
+
+### Version 1.1.3
+- fix some warnings if plugin is installed through WP CLI
