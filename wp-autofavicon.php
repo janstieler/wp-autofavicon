@@ -3,7 +3,7 @@
  * Plugin Name: WP AutoFavicon
  * Plugin URI: https://github.com/janstieler/wp-autofavicon
  * Description: Automatisch generiertes SVG-Favicon mit Dark-Mode-Unterstützung
- * Version: v1.1.8
+ * Version: v1.2.0
  * Author: Kommunikationsdesign Jan-Frederik Stieler
  * Author URI: https://janstieler.de
  * License: MIT
@@ -84,6 +84,9 @@ class WP_AutoFavicon
 
         echo "\n<!-- WP AutoFavicon -->\n";
         echo '<link rel="icon" type="image/svg+xml" href="' . esc_url($home_url . 'favicon.svg') . '">' . "\n";
+        echo '<link rel="icon" type="image/png" sizes="32x32" href="' . esc_url($home_url . 'favicon-32x32.png') . '">' . "\n";
+        echo '<link rel="icon" type="image/png" sizes="16x16" href="' . esc_url($home_url . 'favicon-16x16.png') . '">' . "\n";
+        echo '<link rel="shortcut icon" href="' . esc_url($home_url . 'favicon.ico') . '">' . "\n";
         echo '<link rel="alternate icon" type="image/svg+xml" href="' . esc_url($home_url . 'favicon.svg') . '">' . "\n";
         echo '<!-- /WP AutoFavicon -->' . "\n";
     }
@@ -93,7 +96,10 @@ class WP_AutoFavicon
      */
     public function add_favicon_endpoint()
     {
-        add_rewrite_rule('^favicon\.svg/?$', 'index.php?favicon=1', 'top');
+        add_rewrite_rule('^favicon\.svg/?$', 'index.php?favicon=svg', 'top');
+        add_rewrite_rule('^favicon-32x32\.png/?$', 'index.php?favicon=png32', 'top');
+        add_rewrite_rule('^favicon-16x16\.png/?$', 'index.php?favicon=png16', 'top');
+        add_rewrite_rule('^favicon\.ico/?$', 'index.php?favicon=ico', 'top');
 
         // Füge Query-Var hinzu
         add_filter('query_vars', function ($vars) {
@@ -103,16 +109,36 @@ class WP_AutoFavicon
     }
 
     /**
-     * Liefert das SVG-Favicon aus
+     * Liefert das Favicon aus
      */
     public function serve_favicon()
     {
-        if (get_query_var('favicon')) {
-            header('Content-Type: image/svg+xml');
-            header('Cache-Control: public, max-age=31536000');
-
-            echo $this->generate_svg();
-            exit;
+        $favicon_type = get_query_var('favicon');
+        
+        switch ($favicon_type) {
+            case 'svg':
+                header('Content-Type: image/svg+xml');
+                header('Cache-Control: public, max-age=31536000');
+                echo $this->generate_svg();
+                exit;
+                
+            case 'png32':
+                header('Content-Type: image/png');
+                header('Cache-Control: public, max-age=31536000');
+                echo $this->generate_png(32);
+                exit;
+                
+            case 'png16':
+                header('Content-Type: image/png');
+                header('Cache-Control: public, max-age=31536000');
+                echo $this->generate_png(16);
+                exit;
+                
+            case 'ico':
+                header('Content-Type: image/x-icon');
+                header('Cache-Control: public, max-age=31536000');
+                echo $this->generate_ico();
+                exit;
         }
     }
 
@@ -144,6 +170,97 @@ class WP_AutoFavicon
         $svg .= '</svg>';
 
         return $svg;
+    }
+
+    /**
+     * Generiert ein PNG-Favicon aus dem SVG
+     */
+    private function generate_png($size = 32)
+    {
+        // Prüfe ob GD Extension verfügbar ist
+        if (!extension_loaded('gd')) {
+            // Fallback: Redirect zum SVG
+            header('Location: ' . home_url('/favicon.svg'));
+            exit;
+        }
+
+        $svg_content = $this->generate_svg();
+        
+        // Erstelle ein Image aus dem SVG (vereinfachte Variante ohne SVG-Parser)
+        // Da PHP-GD SVG nicht nativ unterstützt, erstellen wir das Favicon direkt
+        $options = $this->get_options();
+        
+        $text = $options['text'];
+        $bg_color = $this->hex_to_rgb($options['color']);
+        $text_color = $this->hex_to_rgb($options['text_color']);
+        
+        // Erstelle Bild
+        $image = imagecreatetruecolor($size, $size);
+        
+        // Farben definieren
+        $bg = imagecolorallocate($image, $bg_color['r'], $bg_color['g'], $bg_color['b']);
+        $fg = imagecolorallocate($image, $text_color['r'], $text_color['g'], $text_color['b']);
+        
+        // Hintergrund füllen mit abgerundeten Ecken (vereinfacht als Rechteck)
+        imagefill($image, 0, 0, $bg);
+        
+        // Text hinzufügen
+        $font_size = $size * 0.6; // 60% der Bildgröße
+        $font = 5; // Standard GD Font
+        
+        // Text zentrieren
+        $text_width = imagefontwidth($font) * strlen($text);
+        $text_height = imagefontheight($font);
+        $x = ($size - $text_width) / 2;
+        $y = ($size - $text_height) / 2;
+        
+        imagestring($image, $font, $x, $y, $text, $fg);
+        
+        // PNG ausgeben
+        ob_start();
+        imagepng($image);
+        $png_data = ob_get_clean();
+        
+        // Speicher freigeben
+        imagedestroy($image);
+        
+        return $png_data;
+    }
+
+    /**
+     * Generiert ein ICO-Favicon aus dem PNG
+     */
+    private function generate_ico()
+    {
+        // Erstelle 16x16 und 32x32 PNGs für das ICO
+        $png16 = $this->generate_png(16);
+        $png32 = $this->generate_png(32);
+        
+        // Einfaches ICO-Format (vereinfacht)
+        // ICO Header (6 bytes)
+        $ico_header = pack('vvv', 0, 1, 2); // Reserved, Type, Count
+        
+        // ICO Directory Entries (16 bytes each)
+        $ico_dir1 = pack('CCCCvvVV', 16, 16, 0, 0, 1, 32, strlen($png16), 22 + 32); // 16x16
+        $ico_dir2 = pack('CCCCvvVV', 32, 32, 0, 0, 1, 32, strlen($png32), 22 + strlen($png16)); // 32x32
+        
+        return $ico_header . $ico_dir1 . $ico_dir2 . $png16 . $png32;
+    }
+
+    /**
+     * Konvertiert Hex-Farbe zu RGB-Array
+     */
+    private function hex_to_rgb($hex)
+    {
+        $hex = ltrim($hex, '#');
+        if (strlen($hex) == 3) {
+            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+        }
+        return array(
+            'r' => hexdec(substr($hex, 0, 2)),
+            'g' => hexdec(substr($hex, 2, 2)),
+            'b' => hexdec(substr($hex, 4, 2))
+        );
     }
 
     /**

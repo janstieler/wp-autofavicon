@@ -165,7 +165,10 @@ If you have any problems or questions, please open an issue on GitHub.
 ### Version 1.1.8
 - Add debug functions and the details link
 
+### Version 1.2.0
+- Add  PNG und ico Favicon functionallity
+
 ## To do
-- Generate PNG favicons
+- ~~Generate PNG favicons~~
 - Add Composer for installation
 - Add the plugin to https://wordpress.org/plugins/

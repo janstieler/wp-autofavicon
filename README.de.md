@@ -163,8 +163,11 @@ Bei Problemen oder Fragen öffne bitte ein Issue auf GitHub.
 ### Version 1.1.8
 - Hinzufügen von Debug-Funktionen und des Detail-Links
 
+### Version 1.2.0
+- Hinzufügen von PNG und ico Favicon
+
 ## Zu erledigen
-- Generieren von PNG-Favicons
+- ~~Generieren von PNG-Favicons~~
 - Hinzufügen von Composer für die Installation
 - Hinzufügen des Plugins zu https://wordpress.org/plugins/
 
