@@ -128,6 +128,11 @@ MIT License - wie das Original Kirby AutoFavicon Plugin
 
 Bei Problemen oder Fragen öffne bitte ein Issue auf GitHub.
 
+## Zu erledigen
+- ~~Generieren von PNG-Favicons~~
+- Hinzufügen von Composer für die Installation
+- Hinzufügen des Plugins zu https://wordpress.org/plugins/
+
 ## Changelog
 
 ### Version 1.0.0
@@ -170,8 +175,8 @@ Bei Problemen oder Fragen öffne bitte ein Issue auf GitHub.
 - Die Templateschrift für PNGs nutzen
 - Button hinzugefügt um die Favicons zu erneuern
 
-## Zu erledigen
-- ~~Generieren von PNG-Favicons~~
-- Hinzufügen von Composer für die Installation
-- Hinzufügen des Plugins zu https://wordpress.org/plugins/
-
+### Version 1.2.2
+- Fallback-Mechanismus für Schreibrechte-Probleme hinzugefügt
+- Upload-Verzeichnis als alternative Speicherlocation
+- PHP Precision-Warnung in imagettftext() behoben
+- Bessere Fehlerbehandlung und Logging

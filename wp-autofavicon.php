@@ -3,7 +3,7 @@
  * Plugin Name: WP AutoFavicon
  * Plugin URI: https://github.com/janstieler/wp-autofavicon
  * Description: Automatisch generiertes SVG-Favicon mit Dark-Mode-Unterstützung
- * Version: v1.2.1
+ * Version: v1.2.2
  * Author: Kommunikationsdesign Jan-Frederik Stieler
  * Author URI: https://janstieler.de
  * License: MIT
@@ -89,13 +89,27 @@ class WP_AutoFavicon
     public function add_favicon_tags()
     {
         $home_url = home_url('/');
+        
+        // Prüfe ob Dateien im Root existieren, sonst verwende Fallback-URLs
+        $root_path = ABSPATH;
+        $base_url = $home_url;
+        
+        if (!file_exists($root_path . 'favicon.svg')) {
+            $upload_dir = wp_upload_dir();
+            if (file_exists($upload_dir['basedir'] . '/favicons/favicon.svg')) {
+                $base_url = $upload_dir['baseurl'] . '/favicons/';
+            } else {
+                // Fallback auf dynamische Generierung
+                $base_url = $home_url;
+            }
+        }
 
         echo "\n<!-- WP AutoFavicon -->\n";
-        echo '<link rel="icon" type="image/svg+xml" href="' . esc_url($home_url . 'favicon.svg') . '">' . "\n";
-        echo '<link rel="icon" type="image/png" sizes="96x96" href="' . esc_url($home_url . 'favicon-96x96.png') . '">' . "\n";
-        echo '<link rel="apple-touch-icon" sizes="180x180" href="' . esc_url($home_url . 'apple-touch-icon.png') . '">' . "\n";
-        echo '<link rel="shortcut icon" href="' . esc_url($home_url . 'favicon.ico') . '">' . "\n";
-        echo '<link rel="alternate icon" type="image/svg+xml" href="' . esc_url($home_url . 'favicon.svg') . '">' . "\n";
+        echo '<link rel="icon" type="image/svg+xml" href="' . esc_url($base_url . 'favicon.svg') . '">' . "\n";
+        echo '<link rel="icon" type="image/png" sizes="96x96" href="' . esc_url($base_url . 'favicon-96x96.png') . '">' . "\n";
+        echo '<link rel="apple-touch-icon" sizes="180x180" href="' . esc_url($base_url . 'apple-touch-icon.png') . '">' . "\n";
+        echo '<link rel="shortcut icon" href="' . esc_url($base_url . 'favicon.ico') . '">' . "\n";
+        echo '<link rel="alternate icon" type="image/svg+xml" href="' . esc_url($base_url . 'favicon.svg') . '">' . "\n";
         echo '<!-- /WP AutoFavicon -->' . "\n";
     }
 
@@ -248,7 +262,7 @@ class WP_AutoFavicon
                 $y = ($size - $text_height) / 2 - $bbox[7];
                 
                 // Zeichne Text
-                imagettftext($image, $font_size, 0, (int)$x, (int)$y, $fg, $font_file, $text);
+                imagettftext($image, (int)$font_size, 0, (int)round($x), (int)round($y), $fg, $font_file, $text);
             } else {
                 // Fallback auf GD Font
                 $this->draw_gd_text($image, $size, $text, $fg);
@@ -323,9 +337,11 @@ class WP_AutoFavicon
      */
     public function ensure_physical_favicons()
     {
+        // Prüfe Root-Verzeichnis erst, dann Upload-Verzeichnis
         $root_path = ABSPATH;
+        $upload_dir = wp_upload_dir();
+        $fallback_path = $upload_dir['basedir'] . '/favicons/';
         
-        // Prüfe ob Dateien existieren und aktuell sind
         $files_to_check = [
             'favicon.svg',
             'favicon-96x96.png',
@@ -334,16 +350,30 @@ class WP_AutoFavicon
         ];
         
         $needs_update = false;
-        foreach ($files_to_check as $file) {
-            $file_path = $root_path . $file;
-            if (!file_exists($file_path) || filemtime($file_path) < time() - 3600) {
-                $needs_update = true;
-                break;
+        $check_paths = [$root_path, $fallback_path];
+        
+        foreach ($check_paths as $check_path) {
+            $path_exists = true;
+            foreach ($files_to_check as $file) {
+                $file_path = $check_path . $file;
+                if (!file_exists($file_path)) {
+                    $path_exists = false;
+                    break;
+                }
+            }
+            if ($path_exists) {
+                // Dateien gefunden, kein Update nötig
+                return;
             }
         }
         
-        if ($needs_update) {
-            $this->generate_physical_favicon_files();
+        // Nur generieren wenn wirklich nötig und schreibbar
+        if (is_writable($root_path) || is_writable($upload_dir['basedir'])) {
+            try {
+                $this->generate_physical_favicon_files();
+            } catch (Exception $e) {
+                error_log('WP AutoFavicon: Konnte Dateien nicht generieren: ' . $e->getMessage());
+            }
         }
     }
 
@@ -365,11 +395,23 @@ class WP_AutoFavicon
         $root_path = ABSPATH;
         $files_created = [];
         
+        // Prüfe Schreibberechtigung
+        if (!is_writable($root_path)) {
+            error_log('WP AutoFavicon: WordPress-Root-Verzeichnis ist nicht schreibbar: ' . $root_path);
+            // Verwende Upload-Verzeichnis als Fallback
+            $upload_dir = wp_upload_dir();
+            $root_path = $upload_dir['basedir'] . '/favicons/';
+            if (!is_dir($root_path)) {
+                wp_mkdir_p($root_path);
+            }
+        }
+        
         try {
             // SVG Favicon
             $svg_content = $this->generate_svg();
-            if (!file_put_contents($root_path . 'favicon.svg', $svg_content)) {
-                throw new Exception('Konnte favicon.svg nicht schreiben');
+            $svg_path = $root_path . 'favicon.svg';
+            if (!file_put_contents($svg_path, $svg_content)) {
+                throw new Exception('Konnte favicon.svg nicht schreiben in: ' . $svg_path);
             }
             $files_created[] = 'favicon.svg';
             
@@ -382,8 +424,9 @@ class WP_AutoFavicon
             if (!$png96) {
                 throw new Exception('Konnte 96x96 PNG nicht generieren');
             }
-            if (!file_put_contents($root_path . 'favicon-96x96.png', $png96)) {
-                throw new Exception('Konnte favicon-96x96.png nicht schreiben');
+            $png96_path = $root_path . 'favicon-96x96.png';
+            if (!file_put_contents($png96_path, $png96)) {
+                throw new Exception('Konnte favicon-96x96.png nicht schreiben in: ' . $png96_path);
             }
             $files_created[] = 'favicon-96x96.png';
             
@@ -391,8 +434,9 @@ class WP_AutoFavicon
             if (!$png180) {
                 throw new Exception('Konnte 180x180 PNG nicht generieren');
             }
-            if (!file_put_contents($root_path . 'apple-touch-icon.png', $png180)) {
-                throw new Exception('Konnte apple-touch-icon.png nicht schreiben');
+            $png180_path = $root_path . 'apple-touch-icon.png';
+            if (!file_put_contents($png180_path, $png180)) {
+                throw new Exception('Konnte apple-touch-icon.png nicht schreiben in: ' . $png180_path);
             }
             $files_created[] = 'apple-touch-icon.png';
             
@@ -401,15 +445,16 @@ class WP_AutoFavicon
             if (!$ico_content) {
                 throw new Exception('Konnte ICO nicht generieren');
             }
-            if (!file_put_contents($root_path . 'favicon.ico', $ico_content)) {
-                throw new Exception('Konnte favicon.ico nicht schreiben');
+            $ico_path = $root_path . 'favicon.ico';
+            if (!file_put_contents($ico_path, $ico_content)) {
+                throw new Exception('Konnte favicon.ico nicht schreiben in: ' . $ico_path);
             }
             $files_created[] = 'favicon.ico';
             
             return $files_created;
             
         } catch (Exception $e) {
-            // Bei Fehlern, bereits erstellte Dateien nicht löschen
+            error_log('WP AutoFavicon Fehler: ' . $e->getMessage());
             throw new Exception('Favicon-Generierung fehlgeschlagen: ' . $e->getMessage());
         }
     }
