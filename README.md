@@ -1,6 +1,6 @@
 # WP AutoFavicon
-[![en](https://img.shields.io/badge/lang-en-red.svg)](https://github.com/janstieler/wp-autofavicon/blob/main/README.md)
-[![de](https://img.shields.io/badge/lang-de-yellow.svg)](https://github.com/janstieler/wp-autofavicon/blob/main/README.de.md)
+[![Badge](https://forthebadge.com/api/badges/generate?primaryLabel=Lang&secondaryLabel=EN&primaryBGColor=%23555555&secondaryBGColor=%23D05A45)](https://github.com/janstieler/wp-autofavicon/blob/main/README.md)
+[![Badge](https://forthebadge.com/api/badges/generate?primaryLabel=Lang&secondaryLabel=DE&primaryBGColor=%23555555&secondaryBGColor=%23D2AA26)](https://github.com/janstieler/wp-autofavicon/blob/main/README.de.md)
 
 A WordPress plugin that automatically generates an SVG favicon with dark mode support. Ported from the [Kirby AutoFavicon Plugin](https://github.com/medienbaecker/kirby-autofavicon).
 
