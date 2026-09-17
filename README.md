@@ -1,6 +1,6 @@
 # WP AutoFavicon
-[![Badge](https://forthebadge.com/api/badges/generate?primaryLabel=Lang&secondaryLabel=EN&primaryBGColor=%23555555&secondaryBGColor=%23D05A45)](https://github.com/janstieler/wp-autofavicon/blob/main/README.md)
-[![Badge](https://forthebadge.com/api/badges/generate?primaryLabel=Lang&secondaryLabel=DE&primaryBGColor=%23555555&secondaryBGColor=%23D2AA26)](https://github.com/janstieler/wp-autofavicon/blob/main/README.de.md)
+[![en](https://img.shields.io/badge/lang-en-red.svg)](https://github.com/janstieler/wp-autofavicon/blob/main/README.md)
+[![de](https://img.shields.io/badge/lang-de-yellow.svg)](https://github.com/janstieler/wp-autofavicon/blob/main/README.de.md)
 
 A WordPress plugin that automatically generates an SVG favicon with dark mode support. Ported from the [Kirby AutoFavicon Plugin](https://github.com/medienbaecker/kirby-autofavicon).
 
@@ -45,6 +45,8 @@ Without configuration, the plugin uses:
 - The first letter of your blog name as text
 - Black background with white text in light mode
 - White background with black text in dark mode
+
+If a site icon is set under *Settings → General*, it takes precedence: the plugin then outputs no favicon tags.
 
 ## Usage
 
@@ -182,3 +184,6 @@ If you have any problems or questions, please open an issue on GitHub.
 - Upload directory as alternative storage location
 - PHP precision warning in imagettftext() fixed
 - Improved error handling and logging
+
+### Version 1.2.3
+- A site icon set under Settings → General takes precedence: the plugin then outputs no favicon tags and writes no files to the root. A notice on the settings page explains this.

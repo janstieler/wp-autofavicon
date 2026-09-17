@@ -45,6 +45,8 @@ Ohne Konfiguration nutzt das Plugin:
 - Schwarzen Hintergrund mit weißem Text im Hell-Modus
 - Weißen Hintergrund mit schwarzem Text im Dunkel-Modus
 
+Ist unter *Einstellungen → Allgemein* ein Website-Icon gesetzt, hat dieses Vorrang: Das Plugin gibt dann keine Favicon-Tags aus.
+
 ## Verwendung
 
 Das Plugin funktioniert automatisch nach der Aktivierung. Es fügt die notwendigen `<link>`-Tags zu deinem WordPress `<head>` hinzu:
@@ -180,3 +182,6 @@ Bei Problemen oder Fragen öffne bitte ein Issue auf GitHub.
 - Upload-Verzeichnis als alternative Speicherlocation
 - PHP Precision-Warnung in imagettftext() behoben
 - Bessere Fehlerbehandlung und Logging
+
+### Version 1.2.3
+- Ein unter Einstellungen → Allgemein gesetztes Website-Icon hat Vorrang: Das Plugin gibt dann keine Favicon-Tags aus und legt keine Dateien im Root an. Hinweis dazu auf der Einstellungsseite.

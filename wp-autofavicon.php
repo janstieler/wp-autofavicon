@@ -3,7 +3,7 @@
  * Plugin Name: WP AutoFavicon
  * Plugin URI: https://github.com/janstieler/wp-autofavicon
  * Description: Automatisch generiertes SVG-Favicon mit Dark-Mode-Unterstützung
- * Version: v1.2.2
+ * Version: v1.2.3
  * Author: Kommunikationsdesign Jan-Frederik Stieler
  * Author URI: https://janstieler.de
  * License: MIT
@@ -84,10 +84,18 @@ class WP_AutoFavicon
     }
 
     /**
-     * Fügt die Favicon-Tags zum <head> hinzu
+     * Fügt die Favicon-Tags zum <head> hinzu.
+     *
+     * Ist unter Einstellungen → Allgemein ein Website-Icon gesetzt, bleibt die Ausgabe
+     * aus: WordPress liefert dann seine eigenen Icon-Tags, und ein zusätzlich
+     * ausgegebenes SVG würde diese in den meisten Browsern verdrängen.
      */
     public function add_favicon_tags()
     {
+        if (has_site_icon()) {
+            return;
+        }
+
         $home_url = home_url('/');
         
         // Prüfe ob Dateien im Root existieren, sonst verwende Fallback-URLs
@@ -335,8 +343,18 @@ class WP_AutoFavicon
     /**
      * Stellt sicher, dass physische Favicon-Dateien existieren
      */
+    /**
+     * Legt die physischen Favicon-Dateien an, falls sie fehlen.
+     *
+     * Bei gesetztem Website-Icon werden keine Dateien erzeugt, damit /favicon.ico
+     * im Root nicht mit dem Icon aus den WordPress-Einstellungen konkurriert.
+     */
     public function ensure_physical_favicons()
     {
+        if (has_site_icon()) {
+            return;
+        }
+
         // Prüfe Root-Verzeichnis erst, dann Upload-Verzeichnis
         $root_path = ABSPATH;
         $upload_dir = wp_upload_dir();
@@ -572,6 +590,20 @@ class WP_AutoFavicon
         ?>
         <div class="wrap">
             <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+
+            <?php if (has_site_icon()): ?>
+                <div class="notice notice-warning inline">
+                    <p>
+                        <?php
+                        printf(
+                            /* translators: %s: Link zu Einstellungen → Allgemein */
+                            esc_html__('Unter %s ist ein Website-Icon gesetzt. Es hat Vorrang – dieses Plugin gibt derzeit kein Favicon aus. Entferne das Website-Icon dort, um das automatisch generierte Favicon zu verwenden.', 'wp-autofavicon'),
+                            '<a href="' . esc_url(admin_url('options-general.php')) . '">' . esc_html__('Einstellungen → Allgemein', 'wp-autofavicon') . '</a>'
+                        );
+                        ?>
+                    </p>
+                </div>
+            <?php endif; ?>
 
             <div style="margin: 20px 0; padding: 15px; background: #fff; border-left: 4px solid #2271b1;">
                 <h3>Vorschau</h3>
