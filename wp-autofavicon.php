@@ -911,7 +911,7 @@ class WP_AutoFavicon_Updater
     {
         global $wp_filesystem;
         $install_directory = plugin_dir_path($this->file);
-        $wp_filesystem->move($result['destination'], $install_directory);
+        $wp_filesystem->move($result['destination'], $install_directory, true);
         $result['destination'] = $install_directory;
         if ($this->active) {
             activate_plugin($this->basename);
