@@ -3,7 +3,7 @@
  * Plugin Name: WP AutoFavicon
  * Plugin URI: https://github.com/janstieler/wp-autofavicon
  * Description: Automatisch generiertes SVG-Favicon mit Dark-Mode-Unterstützung
- * Version: v1.2.3
+ * Version: v1.2.4
  * Author: Kommunikationsdesign Jan-Frederik Stieler
  * Author URI: https://janstieler.de
  * License: MIT
