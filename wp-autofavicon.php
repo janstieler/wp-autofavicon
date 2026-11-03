@@ -3,7 +3,7 @@
  * Plugin Name: WP AutoFavicon
  * Plugin URI: https://github.com/janstieler/wp-autofavicon
  * Description: Automatisch generiertes SVG-Favicon mit Dark-Mode-Unterstützung
- * Version: v1.2.4
+ * Version: v1.2.5
  * Author: Kommunikationsdesign Jan-Frederik Stieler
  * Author URI: https://janstieler.de
  * License: MIT
@@ -836,9 +836,17 @@ class WP_AutoFavicon_Updater
 
     public function modify_transient($transient)
     {
+        // Plugin fehlt in der Prüfliste (z. B. mitten in einem Update) oder GitHub
+        // liefert kein Release (Rate-Limit, Netzfehler): nichts melden.
+        if (empty($transient->checked[$this->basename])) {
+            return $transient;
+        }
+        $this->get_repository_info();
+        if (empty($this->github_response['tag_name'])) {
+            return $transient;
+        }
         if (property_exists($transient, 'checked')) {
             if ($checked = $transient->checked) {
-                $this->get_repository_info();
                 $github_version = $this->normalize_version($this->github_response['tag_name']);
                 $current_version = $this->normalize_version($checked[$this->basename]);
                 $out_of_date = version_compare($github_version, $current_version, 'gt');
@@ -907,8 +915,22 @@ class WP_AutoFavicon_Updater
         return $result;
     }
 
+    /**
+     * Verschiebt nach einem Update das entpackte GitHub-Archiv in das Plugin-Verzeichnis.
+     *
+     * Greift nur ein, wenn das gerade installierte Plugin dieses Plugin ist; der Filter
+     * läuft bei jeder Plugin-Installation.
+     *
+     * @param bool|WP_Error $response   Bisheriges Ergebnis des Filters.
+     * @param array         $hook_extra Zusatzangaben des Upgraders, u. a. 'plugin'.
+     * @param array         $result     Installationsergebnis mit 'destination'.
+     * @return bool|WP_Error|array Unverändertes $response bei fremden Plugins, sonst $result.
+     */
     public function after_install($response, $hook_extra, $result)
     {
+        if (($hook_extra['plugin'] ?? '') !== $this->basename) {
+            return $response;
+        }
         global $wp_filesystem;
         $install_directory = plugin_dir_path($this->file);
         $wp_filesystem->move($result['destination'], $install_directory, true);
