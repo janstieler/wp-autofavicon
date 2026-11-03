@@ -194,3 +194,6 @@ If you have any problems or questions, please open an issue on GitHub.
 ### Version 1.2.5
   - Fix: Updating any other plugin could move its files into the WP AutoFavicon directory and replace this plugin. The post-install hook now only acts on WP AutoFavicon's own updates.
   - No more PHP warnings during update checks when the plugin is missing from the update list or GitHub returns no release
+
+### Version 1.2.6
+ - admin.js is loaded with its file modification time as version, so browsers pick up changes immediately
