@@ -711,7 +711,13 @@ class WP_AutoFavicon
             return;
         }
         
-        wp_enqueue_script('wp-autofavicon-admin', plugin_dir_url(__FILE__) . 'admin.js', array('jquery'), '1.0', true);
+        wp_enqueue_script(
+            'wp-autofavicon-admin',
+            plugin_dir_url(__FILE__) . 'admin.js',
+            array('jquery'),
+            (string) filemtime(plugin_dir_path(__FILE__) . 'admin.js'),
+            true
+        );
         wp_localize_script('wp-autofavicon-admin', 'wpAutofavicon', array(
             'ajaxurl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('regenerate_favicons_nonce')
