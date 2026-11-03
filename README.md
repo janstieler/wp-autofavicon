@@ -187,3 +187,10 @@ If you have any problems or questions, please open an issue on GitHub.
 
 ### Version 1.2.3
 - A site icon set under Settings → General takes precedence: the plugin then outputs no favicon tags and writes no files to the root. A notice on the settings page explains this.
+
+### Version 1.2.4
+  - Self-update overwrites the existing plugin directory on install
+
+### Version 1.2.5
+  - Fix: Updating any other plugin could move its files into the WP AutoFavicon directory and replace this plugin. The post-install hook now only acts on WP AutoFavicon's own updates.
+  - No more PHP warnings during update checks when the plugin is missing from the update list or GitHub returns no release

@@ -185,3 +185,11 @@ Bei Problemen oder Fragen öffne bitte ein Issue auf GitHub.
 
 ### Version 1.2.3
 - Ein unter Einstellungen → Allgemein gesetztes Website-Icon hat Vorrang: Das Plugin gibt dann keine Favicon-Tags aus und legt keine Dateien im Root an. Hinweis dazu auf der Einstellungsseite.
+
+### Version 1.2.4
+  - Selbst-Update überschreibt beim Installieren das vorhandene Plugin-Verzeichnis
+
+### Version 1.2.5
+  - Behoben: Beim Update eines beliebigen anderen Plugins konnten dessen Dateien in das Verzeichnis von WP AutoFavicon verschoben werden und dieses Plugin ersetzen. Der Post-Install-Hook greift jetzt nur noch bei
+  Updates von WP AutoFavicon selbst.
+  - Keine PHP-Warnungen mehr bei der Update-Prüfung, wenn das Plugin in der Prüfliste fehlt oder GitHub kein Release liefert
